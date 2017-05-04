@@ -30,16 +30,10 @@ class CodeGenerator implements AATVisitor {
 
         if(expression.operator() == AATOperator.PLUS) {
             emit("add $t1, $t1, $t2");
-            emit("sw $t1, 8($ESP)");
-            emit("add $ESP, $ESP, 4");
         } else if (expression.operator() == AATOperator.MINUS) {
             emit("sub $t1, $t1, $t2");
-            emit("sw $t1, 8($ESP)");
-            emit("add $ESP, $ESP, 4");
         } else if (expression.operator() == AATOperator.GREATER_THAN) {
             emit("slt $t1, $t2, $t1");
-            emit("sw $t1, 8($ESP)");
-            emit("add $ESP, $ESP, 4");
         } else if (expression.operator() == AATOperator.LESS_THAN) {
             emit("slt $t1, $t1, $t2");
             emit("sw $t1, 8($ESP)");
@@ -47,14 +41,33 @@ class CodeGenerator implements AATVisitor {
         } else if (expression.operator() == AATOperator.GREATER_THAN_EQUAL) {
             emit("addi $t2, $t2, -1");
             emit("slt $t1, $t2, $t1");
-            emit("sw $t1, 8($ESP)");
-            emit("add $ESP, $ESP, 4");
         } else if (expression.operator() == AATOperator.LESS_THAN_EQUAL) {
             emit("addi $t1, $t1, -1");
             emit("slt $t1, $t1, $t2");
-            emit("sw $t1, 8($ESP)");
-            emit("add $ESP, $ESP, 4");
+        } else if (expression.operator() == AATOperator.EQUAL) {
+            emit("beq $t1, $t2, truelab");
+            emit("addi $t1, 0");
+            emit("j endlab");
+            emit("truelab:");
+            emit("addi $t1, 1");
+            emit("endlab:");
+        } else if (expression.operator() == AATOperator.NOT_EQUAL) {
+            emit("beq $t1, $t2, truelab");
+            emit("addi $t1, 1");
+            emit("j endlab");
+            emit("truelab:");
+            emit("addi $t1, 0");
+            emit("endlab:");
+        } else if (expression.operator() == AATOperator.AND) {
+
+        } else if (expression.operator() == AATOperator.OR) {
+
+        } else if (expression.operator() == AATOperator.NOT) {
+
         }
+
+        emit("sw $t1, 8($ESP)");
+        emit("add $ESP, $ESP, 4");
 
 		return null;
     }
