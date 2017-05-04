@@ -22,11 +22,14 @@ class CodeGenerator implements AATVisitor {
 
 
     public Object VisitOperator(AATOperator expression) {
-        expression.left().Accept(this);
-        expression.right().Accept(this);
 
-        emit("lw $t1, 8($ESP)");
-        emit("lw $t2, 4($ESP)");
+        if(expression.operator() != AATOperator.NOT) {
+            expression.left().Accept(this);
+            expression.right().Accept(this);
+
+            emit("lw $t1, 8($ESP)");
+            emit("lw $t2, 4($ESP)");
+        }
 
         if(expression.operator() == AATOperator.PLUS) {
             emit("add $t1, $t1, $t2");
@@ -61,9 +64,17 @@ class CodeGenerator implements AATVisitor {
         } else if (expression.operator() == AATOperator.AND) {
 
         } else if (expression.operator() == AATOperator.OR) {
-
+            emit("add $t1, $t1, $t2");
         } else if (expression.operator() == AATOperator.NOT) {
+            expression.left().Accept(this);
+            emit("addi $t1, $zero, " + 1);
+            emit("sw $t1, 0($ESP)");
+            emit("addi $ESP, $ESP, -4");
 
+            emit("lw $t1, 8($ESP)");
+            emit("lw $t2, 4($ESP)");
+
+            emit("sub $t1, $t2, $t1");
         }
 
         emit("sw $t1, 8($ESP)");
