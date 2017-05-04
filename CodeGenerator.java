@@ -25,16 +25,33 @@ class CodeGenerator implements AATVisitor {
         expression.left().Accept(this);
         expression.right().Accept(this);
 
+        emit("lw $t1, 8($ESP)");
+        emit("lw $t2, 4($ESP)");
+
         if(expression.operator() == AATOperator.PLUS) {
-            emit("lw $t1, 8($ESP)");
-            emit("lw $t2, 4($ESP)");
             emit("add $t1, $t1, $t2");
             emit("sw $t1, 8($ESP)");
             emit("add $ESP, $ESP, 4");
         } else if (expression.operator() == AATOperator.MINUS) {
-            emit("lw $t1, 8($ESP)");
-            emit("lw $t2, 4($ESP)");
             emit("sub $t1, $t1, $t2");
+            emit("sw $t1, 8($ESP)");
+            emit("add $ESP, $ESP, 4");
+        } else if (expression.operator() == AATOperator.GREATER_THAN) {
+            emit("slt $t1, $t2, $t1");
+            emit("sw $t1, 8($ESP)");
+            emit("add $ESP, $ESP, 4");
+        } else if (expression.operator() == AATOperator.LESS_THAN) {
+            emit("slt $t1, $t1, $t2");
+            emit("sw $t1, 8($ESP)");
+            emit("add $ESP, $ESP, 4");
+        } else if (expression.operator() == AATOperator.GREATER_THAN_EQUAL) {
+            emit("addi $t2, $t2, -1");
+            emit("slt $t1, $t2, $t1");
+            emit("sw $t1, 8($ESP)");
+            emit("add $ESP, $ESP, 4");
+        } else if (expression.operator() == AATOperator.LESS_THAN_EQUAL) {
+            emit("addi $t1, $t1, -1");
+            emit("slt $t1, $t1, $t2");
             emit("sw $t1, 8($ESP)");
             emit("add $ESP, $ESP, 4");
         }
