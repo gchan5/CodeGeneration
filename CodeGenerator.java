@@ -62,9 +62,22 @@ class CodeGenerator implements AATVisitor {
             emit("addi $t1, 0");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.AND) {
-
+            emit("mult $t1, $t2");
+            emit("mflo $t1");
+            emit("bgtz $t1, truelab");
+            emit("addi $t1, 0");
+            emit("j endlab");
+            emit("truelab:");
+            emit("addi $t1, 1");
+            emit("endlab:");
         } else if (expression.operator() == AATOperator.OR) {
             emit("add $t1, $t1, $t2");
+            emit("bgtz $t1, truelab");
+            emit("addi $t1, 0");
+            emit("j endlab");
+            emit("truelab:");
+            emit("addi $t1, 1");
+            emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT) {
             expression.left().Accept(this);
             emit("addi $t1, $zero, " + 1);
@@ -92,6 +105,7 @@ class CodeGenerator implements AATVisitor {
     public Object VisitCallStatement(AATCallStatement statement) {
         return null;
     }
+
     public Object VisitConditionalJump(AATConditionalJump statement) {
         return null;
     }
@@ -99,6 +113,7 @@ class CodeGenerator implements AATVisitor {
     public Object VisitEmpty(AATEmpty statement) {
         return null;
     }
+
     public Object VisitJump(AATJump statement) {
         emit("j " + statement.label());
         return null;
