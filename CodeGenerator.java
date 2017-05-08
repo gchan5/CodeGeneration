@@ -26,6 +26,7 @@ class CodeGenerator implements AATVisitor {
             }
         }
 
+
         emit("addi " + Register.SP() + ", " + Register.SP() + ", " + (-1 * (4 * n)));
         emit("jal " + expression.label().toString());
         emit("addi " + Register.SP() + ", " + Register.SP() + ", " + ((4 * n)));
@@ -128,6 +129,23 @@ class CodeGenerator implements AATVisitor {
     }
 
     public Object VisitCallStatement(AATCallStatement statement) {
+        int n = statement.actuals().size();
+
+        for(int i = 0; i < n; i++){
+            int multiplier = i + 1;
+            ((AATExpression) statement.actuals().get(i)).Accept(this);
+
+            if(multiplier == n){
+                emit("sw " + Register.ACC() + ", -" + 0 + "(" + Register.SP() + ")");
+            } else {
+                emit("sw " + Register.ACC() + ", -" + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
+            }
+        }
+
+
+        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + (-1 * (4 * n)));
+        emit("jal " + statement.label().toString());
+        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + ((4 * n)));
         return null;
     }
 
