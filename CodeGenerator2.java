@@ -17,8 +17,6 @@ class CodeGenerator implements AATVisitor {
     }
 
     public Object VisitMemory(AATMemory expression) {
-        expression.mem().Accept(this);
-        emit("lw $ACC, 0($ACC)");
 		return null;
     }
 
@@ -27,86 +25,80 @@ class CodeGenerator implements AATVisitor {
 
         if(expression.operator() != AATOperator.NOT) {
             expression.left().Accept(this);
-
-            emit("sw $ACC, 0($ESP)");
-            emit("addi $ESP, $ESP, -4");
-
             expression.right().Accept(this);
 
-            emit("lw $t1, 4($ESP)");
-            emit("addi $ESP, $ESP, 4");
+            emit("lw $t1, 8($ESP)");
+            emit("lw $t2, 4($ESP)");
         }
 
         if(expression.operator() == AATOperator.PLUS) {
-            emit("add $ACC, $t1, $ACC");
+            emit("add $t1, $t1, $t2");
         } else if (expression.operator() == AATOperator.MINUS) {
-            emit("sub $ACC, $t1, $ACC");
+            emit("sub $t1, $t1, $t2");
         } else if (expression.operator() == AATOperator.GREATER_THAN) {
-            emit("slt $ACC, $t1, $ACC");
+            emit("slt $t1, $t2, $t1");
         } else if (expression.operator() == AATOperator.LESS_THAN) {
-            emit("slt $ACC, $ACC, $t1");
-            emit("sw $ACC, 4($ESP)");
+            emit("slt $t1, $t1, $t2");
+            emit("sw $t1, 8($ESP)");
             emit("add $ESP, $ESP, 4");
         } else if (expression.operator() == AATOperator.GREATER_THAN_EQUAL) {
-            emit("addi $t1, $t1, -1");
-            emit("slt $ACC, $t1, $ACC");
+            emit("addi $t2, $t2, -1");
+            emit("slt $t1, $t2, $t1");
         } else if (expression.operator() == AATOperator.LESS_THAN_EQUAL) {
-            emit("addi $ACC, $ACC, -1");
-            emit("slt $ACC, $ACC, $t1");
+            emit("addi $t1, $t1, -1");
+            emit("slt $t1, $t1, $t2");
         } else if (expression.operator() == AATOperator.EQUAL) {
-            emit("beq $ACC, $t1, truelab");
-            emit("addi $ACC, 0");
+            emit("beq $t1, $t2, truelab");
+            emit("addi $t1, 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 1");
+            emit("addi $t1, 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT_EQUAL) {
-            emit("beq $ACC, $t1, truelab");
-            emit("addi $ACC, 1");
+            emit("beq $t1, $t2, truelab");
+            emit("addi $t1, 1");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 0");
+            emit("addi $t1, 0");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.AND) {
-            emit("mult $ACC, $t1");
-            emit("mflo $ACC");
-            emit("bgtz $ACC, truelab");
-            emit("addi $ACC, 0");
+            emit("mult $t1, $t2");
+            emit("mflo $t1");
+            emit("bgtz $t1, truelab");
+            emit("addi $t1, 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 1");
+            emit("addi $t1, 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.OR) {
-            emit("add $ACC, $ACC, $t1");
-            emit("bgtz $ACC, truelab");
-            emit("addi $ACC, 0");
+            emit("add $t1, $t1, $t2");
+            emit("bgtz $t1, truelab");
+            emit("addi $t1, 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 1");
+            emit("addi $t1, 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT) {
             expression.left().Accept(this);
-            emit("sw $ACC, 0($ESP)");
+            emit("addi $t1, $zero, " + 1);
+            emit("sw $t1, 0($ESP)");
             emit("addi $ESP, $ESP, -4");
 
-            emit("addi $t1, 1");
+            emit("lw $t1, 8($ESP)");
+            emit("lw $t2, 4($ESP)");
 
-            emit("sub $ACC, $t1, $ACC");
+            emit("sub $t1, $t2, $t1");
         }
 
-//        emit("sw $t1, 8($ESP)");
-//        emit("add $ESP, $ESP, 4");
+        emit("sw $t1, 8($ESP)");
+        emit("add $ESP, $ESP, 4");
 
 		return null;
     }
 
     public Object VisitRegister(AATRegister expression) {
-//        Simple Tiling
-//        emit("sw " + expression.register().toString() + ", 0($ESP)");
-//        emit("addi $ESP, $ESP, -4");
-
-//        Improved Tiling
-        emit("addi $ACC, " + expression.register() + ", 0");
+        emit("sw " + expression.register().toString() + ", 0($ESP)");
+        emit("addi $ESP, $ESP, -4");
 		return null;
     }
 
@@ -126,29 +118,22 @@ class CodeGenerator implements AATVisitor {
         emit("j " + statement.label());
         return null;
     }
-
     public Object VisitLabel(AATLabel statement) {
         emit(statement.label() + ":");
         return null;
     }
-    
     public Object VisitMove(AATMove statement) {
-        
-        // <emit code to store acc on expression stack>
-        statement.rhs().Accept(this);
-        
         if (statement.lhs() instanceof AATMemory) {
             ((AATMemory)statement.lhs()).mem().Accept(this);
+            // <emit code to store acc on expression stack>
+            statement.rhs().Accept(this);
+            // <code to pop value off expression stack to T1>
             emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
-
-        } else if (statement.lhs() instanceof AATRegister) {
-            ((AATRegister)statement.lhs()).mem().Accept(this);
 
         }
 
         return null;
     }
-    
     public Object VisitReturn(AATReturn statement) {
         emit("jr " + Register.ReturnAddr());
         return null;
@@ -160,19 +145,13 @@ class CodeGenerator implements AATVisitor {
 	    return null;
     }
     public Object VisitSequential(AATSequential statement) {
-        statement.left().Accept(this);
-        statement.right().Accept(this);
         return null;
     }
 
     public Object VisitConstant(AATConstant expression) {
-//        Simple Tiling
-//        emit("addi $t1, $zero, " + expression.value());
-//        emit("sw $t1, 0($ESP)");
-//        emit("addi $ESP, $ESP, -4");
-
-//        Improved Tiling
-        emit("addi $ACC, $zero, " + expression.value());
+        emit("addi $t1, $zero, " + expression.value());
+        emit("sw $t1, 0($ESP)");
+        emit("addi $ESP, $ESP, -4");
 
         return null;
     }
