@@ -13,12 +13,30 @@ class CodeGenerator implements AATVisitor {
     }
 
     public Object VisitCallExpression(AATCallExpression expression) {
+        int n = expression.actuals().size();
+
+        for(int i = 0; i < n; i++){
+            int multiplier = i + 1;
+            ((AATExpression) expression.actuals().get(i)).Accept(this);
+
+            if(multiplier == n){
+                emit("sw " + Register.ACC() + ", -" + 0 + "(" + Register.SP() + ")");
+            } else {
+                emit("sw " + Register.ACC() + ", -" + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
+            }
+        }
+
+
+        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + (-1 * (4 * n)));
+        emit("jal " + expression.label().toString());
+        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + ((4 * n)));
+        emit("addi " + Register.ACC() + ", " + Register.Result() + ", 0");
 		return null;
     }
 
     public Object VisitMemory(AATMemory expression) {
         expression.mem().Accept(this);
-        emit("lw $ACC, 0($ACC)");
+        emit("lw " + Register.ACC() + ", 0(" + Register.ACC() + ")");
 		return null;
     }
 
@@ -28,93 +46,113 @@ class CodeGenerator implements AATVisitor {
         if(expression.operator() != AATOperator.NOT) {
             expression.left().Accept(this);
 
-            emit("sw $ACC, 0($ESP)");
-            emit("addi $ESP, $ESP, -4");
+            emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
 
             expression.right().Accept(this);
 
-            emit("lw $t1, 4($ESP)");
-            emit("addi $ESP, $ESP, 4");
+            emit("lw " + Register.Tmp1() + ", 4(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " + Register.ESP() + ", 4");
         }
 
         if(expression.operator() == AATOperator.PLUS) {
-            emit("add $ACC, $t1, $ACC");
+            emit("add " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.MINUS) {
-            emit("sub $ACC, $t1, $ACC");
+            emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.GREATER_THAN) {
-            emit("slt $ACC, $t1, $ACC");
+            emit("slt " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.LESS_THAN) {
-            emit("slt $ACC, $ACC, $t1");
-            emit("sw $ACC, 4($ESP)");
-            emit("add $ESP, $ESP, 4");
+            emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
+            emit("sw " + Register.ACC() + ", 4(" + Register.ESP() + ")");
+            emit("add " + Register.ESP() + ", " + Register.ESP() + ", 4");
         } else if (expression.operator() == AATOperator.GREATER_THAN_EQUAL) {
-            emit("addi $t1, $t1, -1");
-            emit("slt $ACC, $t1, $ACC");
+            emit("addi " + Register.Tmp1() + ", " + Register.Tmp1() + ", -1");
+            emit("slt " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.LESS_THAN_EQUAL) {
-            emit("addi $ACC, $ACC, -1");
-            emit("slt $ACC, $ACC, $t1");
+            emit("addi " + Register.ACC() + ", " + Register.ACC() + ", -1");
+            emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
         } else if (expression.operator() == AATOperator.EQUAL) {
-            emit("beq $ACC, $t1, truelab");
-            emit("addi $ACC, 0");
+            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", truelab");
+            emit("addi " + Register.ACC() + ", 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 1");
+            emit("addi " + Register.ACC() + ", 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT_EQUAL) {
-            emit("beq $ACC, $t1, truelab");
-            emit("addi $ACC, 1");
+            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", truelab");
+            emit("addi " + Register.ACC() + ", 1");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 0");
+            emit("addi " + Register.ACC() + ", 0");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.AND) {
-            emit("mult $ACC, $t1");
-            emit("mflo $ACC");
-            emit("bgtz $ACC, truelab");
-            emit("addi $ACC, 0");
+            emit("mult " + Register.ACC() + ", " + Register.Tmp1() + "");
+            emit("mflo " + Register.ACC() + "");
+            emit("bgtz " + Register.ACC() + ", truelab");
+            emit("addi " + Register.ACC() + ", 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 1");
+            emit("addi " + Register.ACC() + ", 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.OR) {
-            emit("add $ACC, $ACC, $t1");
-            emit("bgtz $ACC, truelab");
-            emit("addi $ACC, 0");
+            emit("add " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
+            emit("bgtz " + Register.ACC() + ", truelab");
+            emit("addi " + Register.ACC() + ", 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi $ACC, 1");
+            emit("addi " + Register.ACC() + ", 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT) {
             expression.left().Accept(this);
-            emit("sw $ACC, 0($ESP)");
-            emit("addi $ESP, $ESP, -4");
+            emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
 
-            emit("addi $t1, 1");
+            emit("addi " + Register.Tmp1() + ", 1");
 
-            emit("sub $ACC, $t1, $ACC");
+            emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         }
 
-//        emit("sw $t1, 8($ESP)");
-//        emit("add $ESP, $ESP, 4");
+//        emit("sw " + Register.Tmp1() + ", 8(" + Register.ESP() + ")");
+//        emit("add " + Register.ESP() + ", " + Register.ESP() + ", 4");
 
 		return null;
     }
 
     public Object VisitRegister(AATRegister expression) {
 //        Simple Tiling
-//        emit("sw " + expression.register().toString() + ", 0($ESP)");
-//        emit("addi $ESP, $ESP, -4");
+//        emit("sw " + expression.register().toString() + ", 0(" + Register.ESP() + ")");
+//        emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
 
 //        Improved Tiling
-        emit("addi $ACC, " + expression.register() + ", 0");
+        emit("addi " + Register.ACC() + ", " + expression.register() + ", 0");
 		return null;
     }
 
     public Object VisitCallStatement(AATCallStatement statement) {
+        int n = statement.actuals().size();
+
+        for(int i = 0; i < n; i++){
+            int multiplier = i + 1;
+            ((AATExpression) statement.actuals().get(i)).Accept(this);
+
+            if(multiplier == n){
+                emit("sw " + Register.ACC() + ", -" + 0 + "(" + Register.SP() + ")");
+            } else {
+                emit("sw " + Register.ACC() + ", -" + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
+            }
+        }
+
+
+        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + (-1 * (4 * n)));
+        emit("jal " + statement.label().toString());
+        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + ((4 * n)));
         return null;
     }
 
     public Object VisitConditionalJump(AATConditionalJump statement) {
+        statement.test().Accept(this);
+
+        emit("bgtz " + Register.ACC() + ", " + statement.label().toString());
         return null;
     }
 
@@ -167,12 +205,12 @@ class CodeGenerator implements AATVisitor {
 
     public Object VisitConstant(AATConstant expression) {
 //        Simple Tiling
-//        emit("addi $t1, $zero, " + expression.value());
-//        emit("sw $t1, 0($ESP)");
-//        emit("addi $ESP, $ESP, -4");
+//        emit("addi " + Register.Tmp1() + ", $zero, " + expression.value());
+//        emit("sw " + Register.Tmp1() + ", 0(" + Register.ESP() + ")");
+//        emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
 
 //        Improved Tiling
-        emit("addi $ACC, $zero, " + expression.value());
+        emit("addi " + Register.ACC() + ", $zero, " + expression.value());
 
         return null;
     }
