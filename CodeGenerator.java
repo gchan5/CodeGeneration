@@ -185,15 +185,15 @@ class CodeGenerator implements AATVisitor {
             // Store lhs memory value into ACC
             ((AATMemory)statement.lhs()).mem().Accept(this);
             
-            // Move acc onto esp (can't assume lhs won't use t1)
+            // Move acc onto esp (can't assume rhs won't use t1)
             emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
             
             // Store rhs value into ACC
             statement.rhs().Accept(this);
 
-            // Load lhs value into t1
-            emit("lw $t1, 4(" + Register.ESP() + ")");
+            // Load lhs value from esp into t1
+            emit("lw " + Register.Tmp1() + ", 4(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
             
             // Move acc into t1
