@@ -178,24 +178,25 @@ class CodeGenerator implements AATVisitor {
 
             // Accept the right hand side
             if (statement.rhs() instanceof AATConstant) {
-                statement.rhs().Accept(this);
             } else if (statement.rhs() instanceof AATRegister) {
-                statement.rhs().Accept(this);
             } else if (statement.rhs() instanceof AATOperator) {
-                statement.rhs().Accept(this);
             }
 
+            // Store lhs value into ACC
+            ((AATMemory)statement.lhs()).mem().Accept(this);
+            
             // Move acc onto esp (can't assume lhs won't use t1)
             emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
+            
 
-            // Accept the left hande side
-            ((AATMemory)statement.lhs()).mem().Accept(this);
+            // Store rhs value into ACC
+            statement.rhs().Accept(this);
 
-            // Pop lhs's value off the esp into t1
-            emit("sw " + Register.Tmp1() + "0(" + Register.ESP() + ")");
+            // Load lhs value into t1
+            emit("lw $t1, 4(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
-
+            
             // Move acc into t1
             emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
 
