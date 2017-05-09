@@ -3,13 +3,13 @@ import java.io.*;
 class CodeGenerator implements AATVisitor {
 
     public CodeGenerator(String output_filename) {
-	try {
-	    output = new PrintWriter(new FileOutputStream(output_filename));
-	} catch (IOException e) {
-	    System.out.println("Could not open file "+output_filename+" for writing.");
-	}
+        try {
+            output = new PrintWriter(new FileOutputStream(output_filename));
+        } catch (IOException e) {
+            System.out.println("Could not open file "+output_filename+" for writing.");
+        }
 	/*  Feel free to add code here, if you want to */
-	EmitSetupCode();
+        EmitSetupCode();
     }
 
     public Object VisitCallExpression(AATCallExpression expression) {
@@ -31,13 +31,13 @@ class CodeGenerator implements AATVisitor {
         emit("jal " + expression.label().toString());
         emit("addi " + Register.SP() + ", " + Register.SP() + ", " + ((4 * n)));
         emit("addi " + Register.ACC() + ", " + Register.Result() + ", 0");
-		return null;
+        return null;
     }
 
     public Object VisitMemory(AATMemory expression) {
         expression.mem().Accept(this);
         emit("lw " + Register.ACC() + ", 0(" + Register.ACC() + ")");
-		return null;
+        return null;
     }
 
 
@@ -115,7 +115,7 @@ class CodeGenerator implements AATVisitor {
 //        emit("sw " + Register.Tmp1() + ", 8(" + Register.ESP() + ")");
 //        emit("add " + Register.ESP() + ", " + Register.ESP() + ", 4");
 
-		return null;
+        return null;
     }
 
     public Object VisitRegister(AATRegister expression) {
@@ -125,7 +125,7 @@ class CodeGenerator implements AATVisitor {
 
 //        Improved Tiling
         emit("addi " + Register.ACC() + ", " + expression.register() + ", 0");
-		return null;
+        return null;
     }
 
     public Object VisitCallStatement(AATCallStatement statement) {
@@ -169,14 +169,14 @@ class CodeGenerator implements AATVisitor {
         emit(statement.label() + ":");
         return null;
     }
-    
+
     public Object VisitMove(AATMove statement) {
 
         // <emit code to store acc on expression stack>
-        
+
         if (statement.lhs() instanceof AATMemory) {
-            
-            // Accept the right hand side 
+
+            // Accept the right hand side
             if (statement.rhs() instanceof AATConstant) {
                 statement.rhs().Accept(this);
             } else if (statement.rhs() instanceof AATRegister) {
@@ -187,36 +187,36 @@ class CodeGenerator implements AATVisitor {
 
             // Move acc onto esp (can't assume lhs won't use t1)
             emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
-            emit("addi " + Register.ESP() + ", " +Register.ESP + ", -4");
+            emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
 
             // Accept the left hande side
             ((AATMemory)statement.lhs()).mem().Accept(this);
-            
+
             // Pop lhs's value off the esp into t1
             emit("sw " + Register.Tmp1() + "0(" + Register.ESP() + ")");
-            emit("addi " + Register.ESP() + ", " +Register.ESP + ", 4");
+            emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
 
             // Move acc into t1
             emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
 
         } else if (statement.lhs() instanceof AATRegister) {
-            if (rhs instanceof AATConstant) {
-        
-            } else if (rhs instanceof AATRegister) {
-            
-            } else if ((rhs instanceof AATOperator) {
+            if (statement.rhs() instanceof AATConstant) {
+
+            } else if (statement.rhs() instanceof AATRegister) {
+
+            } else if (statement.rhs() instanceof AATOperator) {
 
             }
-            
+
             // Get value of rhs into ACC
             statement.rhs().Accept(this);
 
             // Store ACC into Register denoted by lhs
-            emit("sw " + (AATRegister)statement.register() + " 0(" + Register.ACC() + ")");
+            emit("sw " + ((AATRegister)statement.lhs()).register() + " 0(" + Register.ACC() + ")");
         }
         return null;
     }
-    
+
     public Object VisitReturn(AATReturn statement) {
         emit("jr " + Register.ReturnAddr());
         return null;
@@ -225,7 +225,7 @@ class CodeGenerator implements AATVisitor {
     public Object VisitHalt(AATHalt halt) {
 	/* Don't need to implement halt -- you can leave
 	   this as it is, if you like */
-	    return null;
+        return null;
     }
     public Object VisitSequential(AATSequential statement) {
         statement.left().Accept(this);
@@ -248,60 +248,60 @@ class CodeGenerator implements AATVisitor {
     private void emit(String assem) {
         assem = assem.trim();
         if (assem.charAt(assem.length()-1) == ':')
-          output.println(assem);
+            output.println(assem);
         else
             output.println("\t" + assem);
     }
 
     public void GenerateLibrary() {
-	emit("Print:");
-	emit("lw $a0, 4(" + Register.SP() + ")");
-	emit("li $v0, 1");
-	emit("syscall");
-	emit("li $v0,4");
-	emit("la $a0, sp");
-	emit("syscall");
-	emit("jr $ra");
-	emit("Println:");
-	emit("li $v0,4");
-	emit("la $a0, cr");
-	emit("syscall");
-	emit("jr $ra");
-	emit("Read:");
-	emit("li $v0,5");
-	emit("syscall");
-	emit("jr $ra");
-	emit("allocate:");
-	emit("la " + Register.Tmp1() + ", HEAPPTR");
-	emit("lw " + Register.Result() + ",0(" + Register.Tmp1() + ")");
-	emit("lw " + Register.Tmp2() + ", 4(" + Register.SP() + ")");
-	emit("sub " + Register.Tmp2() + "," + Register.Result() + "," + Register.Tmp2());
-	emit("sw " + Register.Tmp2() + ",0(" + Register.Tmp1() + ")");
-	emit("jr $ra");
-	emit(".data");
-	emit("cr:");
-	emit(".asciiz \"\\n\"");
-	emit("sp:");
-	emit(".asciiz \" \"");
+        emit("Print:");
+        emit("lw $a0, 4(" + Register.SP() + ")");
+        emit("li $v0, 1");
+        emit("syscall");
+        emit("li $v0,4");
+        emit("la $a0, sp");
+        emit("syscall");
+        emit("jr $ra");
+        emit("Println:");
+        emit("li $v0,4");
+        emit("la $a0, cr");
+        emit("syscall");
+        emit("jr $ra");
+        emit("Read:");
+        emit("li $v0,5");
+        emit("syscall");
+        emit("jr $ra");
+        emit("allocate:");
+        emit("la " + Register.Tmp1() + ", HEAPPTR");
+        emit("lw " + Register.Result() + ",0(" + Register.Tmp1() + ")");
+        emit("lw " + Register.Tmp2() + ", 4(" + Register.SP() + ")");
+        emit("sub " + Register.Tmp2() + "," + Register.Result() + "," + Register.Tmp2());
+        emit("sw " + Register.Tmp2() + ",0(" + Register.Tmp1() + ")");
+        emit("jr $ra");
+        emit(".data");
+        emit("cr:");
+        emit(".asciiz \"\\n\"");
+        emit("sp:");
+        emit(".asciiz \" \"");
         emit("HEAPPTR:");
-	emit(".word 0");
-	output.flush();
+        emit(".word 0");
+        output.flush();
     }
 
     private void EmitSetupCode() {
-	emit(".globl main");
-	emit("main:");
-	emit("addi " + Register.ESP() + "," + Register.SP() + ",0");
-	emit("addi " + Register.SP() + "," + Register.SP() + "," +
-	     - MachineDependent.WORDSIZE * STACKSIZE);
-	emit("addi " + Register.Tmp1() + "," + Register.SP() + ",0");
-	emit("addi " + Register.Tmp1() + "," + Register.Tmp1() + "," +
-	     - MachineDependent.WORDSIZE * STACKSIZE);
-	emit("la " + Register.Tmp2() + ", HEAPPTR");
-	emit("sw " + Register.Tmp1() + ",0(" + Register.Tmp2() + ")");
+        emit(".globl main");
+        emit("main:");
+        emit("addi " + Register.ESP() + "," + Register.SP() + ",0");
+        emit("addi " + Register.SP() + "," + Register.SP() + "," +
+                - MachineDependent.WORDSIZE * STACKSIZE);
+        emit("addi " + Register.Tmp1() + "," + Register.SP() + ",0");
+        emit("addi " + Register.Tmp1() + "," + Register.Tmp1() + "," +
+                - MachineDependent.WORDSIZE * STACKSIZE);
+        emit("la " + Register.Tmp2() + ", HEAPPTR");
+        emit("sw " + Register.Tmp1() + ",0(" + Register.Tmp2() + ")");
         emit("sw " + Register.ReturnAddr() + "," + MachineDependent.WORDSIZE  + "("+ Register.SP() + ")");
- 	emit("jal main1");
-	emit("li $v0, 10");
+        emit("jal main1");
+        emit("li $v0, 10");
         emit("syscall");
     }
 
