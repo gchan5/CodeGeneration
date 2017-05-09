@@ -187,13 +187,14 @@ class CodeGenerator implements AATVisitor {
 
             // Move acc onto esp (can't assume lhs won't use t1)
             emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
-            emit("addi " + Register.ESP() + ", " +Register.ESP + ", 4");
+            emit("addi " + Register.ESP() + ", " +Register.ESP + ", -4");
 
             // Accept the left hande side
             ((AATMemory)statement.lhs()).mem().Accept(this);
             
             // Pop lhs's value off the esp into t1
             emit("sw " + Register.Tmp1() + "0(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " +Register.ESP + ", 4");
 
             // Move acc into t1
             emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
@@ -208,10 +209,15 @@ class CodeGenerator implements AATVisitor {
             }
             
             statement.rhs().Accept(this);
-            ((AATRegister)statement.lhs()).mem().Accept(this);
+
             emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
-            emit("addi " + Register.ESP() + ", " +Register.ESP + ", 4");
+            emit("addi " + Register.ESP() + ", " +Register.ESP + ", -4");
+            
+            ((AATRegister)statement.lhs()).mem().Accept(this);
+            
             emit("sw " + Register.Tmp1() + " 0(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " +Register.ESP + ", 4");
+
             emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
         }
         return null;
