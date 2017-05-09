@@ -208,17 +208,11 @@ class CodeGenerator implements AATVisitor {
 
             }
             
+            // Get value of rhs into ACC
             statement.rhs().Accept(this);
 
-            emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
-            emit("addi " + Register.ESP() + ", " +Register.ESP + ", -4");
-            
-            ((AATRegister)statement.lhs()).mem().Accept(this);
-            
-            emit("sw " + Register.Tmp1() + " 0(" + Register.ESP() + ")");
-            emit("addi " + Register.ESP() + ", " +Register.ESP + ", 4");
-
-            emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
+            // Store ACC into Register denoted by lhs
+            emit("sw " + (AATRegister)statement.register() + " 0(" + Register.ACC() + ")");
         }
         return null;
     }
