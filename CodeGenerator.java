@@ -8,7 +8,7 @@ class CodeGenerator implements AATVisitor {
         } catch (IOException e) {
             System.out.println("Could not open file "+output_filename+" for writing.");
         }
-	/*  Feel free to add code here, if you want to */
+    /*  Feel free to add code here, if you want to */
         EmitSetupCode();
     }
 
@@ -36,7 +36,7 @@ class CodeGenerator implements AATVisitor {
 
     public Object VisitMemory(AATMemory expression) {
         expression.mem().Accept(this);
-        emit("lw " + Register.ACC() + ", 0(" + Register.ACC() + ")");
+        // emit("lw " + Register.ACC() + ", 0(" + Register.ACC() + ")");
         return null;
     }
 
@@ -170,11 +170,13 @@ class CodeGenerator implements AATVisitor {
         return null;
     }
 
+    private int NUMMOVS = 0;
+
     public Object VisitMove(AATMove statement) {
 
         // <emit code to store acc on expression stack>
-
         if (statement.lhs() instanceof AATMemory) {
+            emit("doingmov" + this.NUMMOVS++ + "_lhs_is_mem:");
 
             // Accept the right hand side
             if (statement.rhs() instanceof AATConstant) {
@@ -186,7 +188,7 @@ class CodeGenerator implements AATVisitor {
             ((AATMemory)statement.lhs()).mem().Accept(this);
             
             // Move acc onto esp (can't assume rhs won't use t1)
-            emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
+            emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
             
             // Store rhs value into ACC
@@ -197,22 +199,24 @@ class CodeGenerator implements AATVisitor {
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
             
             // Move acc into t1
-            emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
+            emit("sw " + Register.ACC() + ", 0(" + Register.Tmp1() + ")");
 
         } else if (statement.lhs() instanceof AATRegister) {
-            if (statement.rhs() instanceof AATConstant) {
-
-            } else if (statement.rhs() instanceof AATRegister) {
-
-            } else if (statement.rhs() instanceof AATOperator) {
-
-            }
+            emit("doingmov" + this.NUMMOVS++ + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
 
             // Get value of rhs into ACC
             statement.rhs().Accept(this);
 
             // Store ACC into Register denoted by lhs
-            emit("sw " + ((AATRegister)statement.lhs()).register() + " 0(" + Register.ACC() + ")");
+            if (statement.rhs() instanceof AATConstant) {
+                emit("lw " + ((AATRegister)statement.lhs()).register() + ", 0(" + Register.ACC() + ")");
+            } else if (statement.rhs() instanceof AATRegister) {
+                emit("lw " + ((AATRegister)statement.lhs()).register() + ", 0(" + Register.ACC() + ")");
+            } else if (statement.rhs() instanceof AATOperator) {
+                emit("lw " + ((AATRegister)statement.lhs()).register() + ", 0(" + Register.ACC() + ")");
+            }
+
+
         }
         return null;
     }
@@ -223,8 +227,8 @@ class CodeGenerator implements AATVisitor {
     }
 
     public Object VisitHalt(AATHalt halt) {
-	/* Don't need to implement halt -- you can leave
-	   this as it is, if you like */
+    /* Don't need to implement halt -- you can leave
+       this as it is, if you like */
         return null;
     }
     public Object VisitSequential(AATSequential statement) {
