@@ -176,7 +176,7 @@ class CodeGenerator implements AATVisitor {
 
         // <emit code to store acc on expression stack>
         if (statement.lhs() instanceof AATMemory) {
-            emit("doingmov" + this.NUMMOVS++ + "_lhs_is_mem:");
+            emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
 
             // Accept the right hand side
             if (statement.rhs() instanceof AATConstant) {
@@ -202,7 +202,7 @@ class CodeGenerator implements AATVisitor {
             emit("sw " + Register.ACC() + ", 0(" + Register.Tmp1() + ")");
 
         } else if (statement.lhs() instanceof AATRegister) {
-            emit("doingmov" + this.NUMMOVS++ + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
+            emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
 
             // Get value of rhs into ACC
             statement.rhs().Accept(this);
@@ -218,6 +218,7 @@ class CodeGenerator implements AATVisitor {
 
 
         }
+        emit("endmov" + this.NUMMOVS++ + ":");
         return null;
     }
 
