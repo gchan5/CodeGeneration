@@ -171,19 +171,49 @@ class CodeGenerator implements AATVisitor {
     }
     
     public Object VisitMove(AATMove statement) {
-        
+
         // <emit code to store acc on expression stack>
-        statement.rhs().Accept(this);
         
         if (statement.lhs() instanceof AATMemory) {
+            
+            // Accept the right hand side 
+            if (statement.rhs() instanceof AATConstant) {
+                statement.rhs().Accept(this);
+            } else if (statement.rhs() instanceof AATRegister) {
+                statement.rhs().Accept(this);
+            } else if (statement.rhs() instanceof AATOperator) {
+                statement.rhs().Accept(this);
+            }
+
+            // Move acc onto esp (can't assume lhs won't use t1)
+            emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " +Register.ESP + ", -4");
+
+            // Accept the left hande side
             ((AATMemory)statement.lhs()).mem().Accept(this);
+            
+            // Pop lhs's value off the esp into t1
+            emit("sw " + Register.Tmp1() + "0(" + Register.ESP() + ")");
+
+            // Move acc into t1
             emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
 
         } else if (statement.lhs() instanceof AATRegister) {
+            if (rhs instanceof AATConstant) {
+        
+            } else if (rhs instanceof AATRegister) {
+            
+            } else if ((rhs instanceof AATOperator) {
+
+            }
+            
+            statement.rhs().Accept(this);
             ((AATRegister)statement.lhs()).mem().Accept(this);
-
+            emit("sw " + Register.ACC() + " 0(" + Register.ESP() + ")");
+            emit("addi " + Register.ESP() + ", " +Register.ESP + ", -4");
+            emit("sw " + Register.Tmp1() + "0(" + Register.ESP() + ")");
+            emit("sw " + Register.ACC() + " 0(" + Register.Tmp1() + ")");
         }
-
         return null;
     }
     
