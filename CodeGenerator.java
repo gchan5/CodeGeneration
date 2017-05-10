@@ -48,12 +48,18 @@ class CodeGenerator implements AATVisitor {
         String truelab = "truelab" + labeldepth;
         String endlab = "endlab" + labeldepth;
 
+        // if (expression.left() instanceof AATConstant) {
+        //     if (expression.right() instanceof AATConstant) {
+        //             System.out.println("Left: " + ((AATConstant) expression.left()).value());
+        //             System.out.println("Right: " + ((AATConstant) expression.right()).value());
+        //     }
+        // }
+
         if(expression.operator() != AATOperator.NOT) {
             expression.left().Accept(this);
 
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
-
             expression.right().Accept(this);
 
             emit("lw " + Register.Tmp1() + ", 4(" + Register.ESP() + ")");
@@ -105,10 +111,12 @@ class CodeGenerator implements AATVisitor {
 
             emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.MULTIPLY) {
-            emit("mult " + Register.ACC() + ", " + Register.Tmp1());
+            emit("mult " + Register.Tmp1() + ", " + Register.ACC());
+            // // emit("mult " + Register.ACC() + ", " + Register.Tmp1());
             emit("mflo " + Register.ACC());
         } else if (expression.operator() == AATOperator.DIVIDE) {
-            emit("div " + Register.ACC() + ", " + Register.Tmp1());
+            emit("div " + Register.Tmp1() + ", " + Register.ACC());
+            // emit("div " + Register.ACC() + ", " + Register.Tmp1());
             emit("mflo " + Register.ACC());
         }
 
