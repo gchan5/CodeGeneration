@@ -3,6 +3,8 @@ import java.io.*;
 class CodeGenerator implements AATVisitor {
 
     public CodeGenerator(String output_filename) {
+        this.labeldepth = 0;
+
         try {
             output = new PrintWriter(new FileOutputStream(output_filename));
         } catch (IOException e) {
@@ -43,6 +45,9 @@ class CodeGenerator implements AATVisitor {
 
     public Object VisitOperator(AATOperator expression) {
 
+        String truelab = "truelab" + labeldepth;
+        String endlab = "endlab" + labeldepth;
+
         if(expression.operator() != AATOperator.NOT) {
             expression.left().Accept(this);
 
@@ -72,36 +77,40 @@ class CodeGenerator implements AATVisitor {
             emit("addi " + Register.ACC() + ", " + Register.ACC() + ", -1");
             emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
         } else if (expression.operator() == AATOperator.EQUAL) {
-            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", truelab");
+            this.labeldepth++;
+            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", " + truelab);
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
-            emit("j endlab");
-            emit("truelab:");
+            emit("j " + endlab);
+            emit(truelab + ":");
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
-            emit("endlab:");
+            emit(endlab + ":");
         } else if (expression.operator() == AATOperator.NOT_EQUAL) {
-            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", truelab");
+            this.labeldepth++;
+            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", " + truelab);
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
-            emit("j endlab");
-            emit("truelab:");
+            emit("j " + endlab);
+            emit(truelab + ":");
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
-            emit("endlab:");
+            emit(endlab +":");
         } else if (expression.operator() == AATOperator.AND) {
+            this.labeldepth++;
             emit("mult " + Register.ACC() + ", " + Register.Tmp1() + "");
             emit("mflo " + Register.ACC() + "");
-            emit("bgtz " + Register.ACC() + ", truelab");
+            emit("bgtz " + Register.ACC() + ", " + truelab);
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
-            emit("j endlab");
-            emit("truelab:");
+            emit("j " + endlab);
+            emit(truelab + ":");
             emit("addi " + Register.ACC() + ", 1");
-            emit("endlab:");
+            emit(endlab + ":");
         } else if (expression.operator() == AATOperator.OR) {
+            this.labeldepth++;
             emit("add " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
-            emit("bgtz " + Register.ACC() + ", truelab");
+            emit("bgtz " + Register.ACC() + ", " + truelab);
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
-            emit("j endlab");
-            emit("truelab:");
+            emit("j " + endlab);
+            emit(truelab + ":");
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
-            emit("endlab:");
+            emit(endlab + ":");
         } else if (expression.operator() == AATOperator.NOT) {
             expression.left().Accept(this);
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
@@ -195,7 +204,7 @@ class CodeGenerator implements AATVisitor {
             } else if (statement.rhs() instanceof AATExpression) {
                 emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func:");
             } else {
-               System.out.println("Not handling lhs is a register, rhs is unknown");
+                System.out.println("Not handling lhs is a register, rhs is unknown");
             }
 
             // Store lhs memory value into ACC
@@ -224,7 +233,7 @@ class CodeGenerator implements AATVisitor {
             } else if (statement.rhs() instanceof AATOperator) {
                 emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
             } else if (statement.rhs() instanceof AATMemory) {
-               emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func:");
+                emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func:");
             } else {
 
             }
@@ -339,5 +348,6 @@ class CodeGenerator implements AATVisitor {
 
     private final int STACKSIZE = 1000;
     private PrintWriter output;
+    private int labeldepth;
     /* Feel Free to add more instance variables, if you like */
 }
