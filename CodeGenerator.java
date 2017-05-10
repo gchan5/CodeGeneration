@@ -110,6 +110,12 @@ class CodeGenerator implements AATVisitor {
             emit("addi " + Register.Tmp1() + ", " + Register.Zero() + ", 1");
 
             emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
+        } else if (expression.operator() == AATOperator.MULTIPLY) {
+            emit("mult " + Register.ACC() + ", " + Register.Tmp1());
+            emit("mflo " + Register.ACC());
+        } else if (expression.operator() == AATOperator.DIVIDE) {
+            emit("div " + Register.ACC() + ", " + Register.Tmp1());
+            emit("mflo " + Register.ACC());
         }
 
 //        emit("sw " + Register.Tmp1() + ", 8(" + Register.ESP() + ")");
@@ -176,7 +182,7 @@ class CodeGenerator implements AATVisitor {
 
         // <emit code to store acc on expression stack>
         if (statement.lhs() instanceof AATMemory) {
-            
+
 
             if (statement.rhs() instanceof AATConstant) {
                 emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
@@ -186,24 +192,26 @@ class CodeGenerator implements AATVisitor {
                 emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
             } else if (statement.rhs() instanceof AATMemory) {
                 System.out.println("Encountered lhs is a memory, rhs case is a memory");
+            } else if (statement.rhs() instanceof AATCallExpression) {
+                System.out.println("Encountered lhs is a memory, rhs case is a call expression");
             } else {
                 System.out.println("Not handling lhs is a register, rhs is unknown");
             }
 
             // Store lhs memory value into ACC
             ((AATMemory)statement.lhs()).mem().Accept(this);
-            
+
             // Move acc onto esp (can't assume rhs won't use t1)
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
-            
+
             // Store rhs value into ACC
             statement.rhs().Accept(this);
 
             // Load lhs value from esp into t1
             emit("lw " + Register.Tmp1() + ", 4(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
-            
+
             // Move acc into t1
             emit("sw " + Register.ACC() + ", 0(" + Register.Tmp1() + ")");
 
@@ -216,9 +224,9 @@ class CodeGenerator implements AATVisitor {
             } else if (statement.rhs() instanceof AATOperator) {
                 emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
             } else if (statement.rhs() instanceof AATMemory) {
-               
+
             } else {
-           
+
             }
 
             // Get value of rhs into ACC
