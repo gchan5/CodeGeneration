@@ -20,9 +20,9 @@ class CodeGenerator implements AATVisitor {
             ((AATExpression) expression.actuals().get(i)).Accept(this);
 
             if(multiplier == n){
-                emit("sw " + Register.ACC() + ", -" + 0 + "(" + Register.SP() + ")");
+                emit("sw " + Register.ACC() + ", " + 0 + "(" + Register.SP() + ")");
             } else {
-                emit("sw " + Register.ACC() + ", -" + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
+                emit("sw " + Register.ACC() + ", " + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
             }
         }
 
@@ -36,7 +36,7 @@ class CodeGenerator implements AATVisitor {
 
     public Object VisitMemory(AATMemory expression) {
         expression.mem().Accept(this);
-        // emit("lw " + Register.ACC() + ", 0(" + Register.ACC() + ")");
+        emit("lw " + Register.ACC() + ", 0(" + Register.ACC() + ")");
         return null;
     }
 
@@ -136,7 +136,7 @@ class CodeGenerator implements AATVisitor {
             ((AATExpression) statement.actuals().get(i)).Accept(this);
 
             if(multiplier == n){
-                emit("sw " + Register.ACC() + ", -" + 0 + "(" + Register.SP() + ")");
+                emit("sw " + Register.ACC() + ", " + 0 + "(" + Register.SP() + ")");
             } else {
                 emit("sw " + Register.ACC() + ", -" + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
             }
@@ -186,18 +186,18 @@ class CodeGenerator implements AATVisitor {
 
             // Store lhs memory value into ACC
             ((AATMemory)statement.lhs()).mem().Accept(this);
-            
+
             // Move acc onto esp (can't assume rhs won't use t1)
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
-            
+
             // Store rhs value into ACC
             statement.rhs().Accept(this);
 
             // Load lhs value from esp into t1
             emit("lw " + Register.Tmp1() + ", 4(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
-            
+
             // Move acc into t1
             emit("sw " + Register.ACC() + ", 0(" + Register.Tmp1() + ")");
 
@@ -209,11 +209,13 @@ class CodeGenerator implements AATVisitor {
 
             // Store ACC into Register denoted by lhs
             if (statement.rhs() instanceof AATConstant) {
-                emit("lw " + ((AATRegister)statement.lhs()).register() + ", 0(" + Register.ACC() + ")");
+                emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
             } else if (statement.rhs() instanceof AATRegister) {
-                emit("lw " + ((AATRegister)statement.lhs()).register() + ", 0(" + Register.ACC() + ")");
+                emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
             } else if (statement.rhs() instanceof AATOperator) {
-                emit("lw " + ((AATRegister)statement.lhs()).register() + ", 0(" + Register.ACC() + ")");
+                emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
+            } else if (statement.rhs() instanceof AATMemory) {
+                emit("move " + ((AATRegister) statement.lhs()).register() + ", " + Register.ACC());
             }
 
 
