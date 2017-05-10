@@ -16,20 +16,15 @@ class CodeGenerator implements AATVisitor {
 
     public Object VisitCallExpression(AATCallExpression expression) {
         int n = expression.actuals().size();
+        int multiplier = 0;
 
-        for(int i = 0; i < n; i++){
-            int multiplier = i + 1;
+        for(int i = n-1; i >= 0; i--){
             ((AATExpression) expression.actuals().get(i)).Accept(this);
+            emit("sw " + Register.ACC() + ", " + (multiplier * -4) + "(" + Register.SP() + ")");
+            emit("addi " + Register.SP() + ", " + Register.SP() + ", -4");
 
-            if(multiplier == n){
-                emit("sw " + Register.ACC() + ", " + 0 + "(" + Register.SP() + ")");
-            } else {
-                emit("sw " + Register.ACC() + ", " + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
-            }
         }
 
-
-        emit("addi " + Register.SP() + ", " + Register.SP() + ", " + (-1 * (4 * n)));
         emit("jal " + expression.label().toString());
         emit("addi " + Register.SP() + ", " + Register.SP() + ", " + ((4 * n)));
         emit("addi " + Register.ACC() + ", " + Register.Result() + ", 0");
@@ -120,18 +115,10 @@ class CodeGenerator implements AATVisitor {
             emit("mflo " + Register.ACC());
         }
 
-//        emit("sw " + Register.Tmp1() + ", 8(" + Register.ESP() + ")");
-//        emit("add " + Register.ESP() + ", " + Register.ESP() + ", 4");
-
         return null;
     }
 
     public Object VisitRegister(AATRegister expression) {
-//        Simple Tiling
-//        emit("sw " + expression.register().toString() + ", 0(" + Register.ESP() + ")");
-//        emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
-
-//        Improved Tiling
         emit("addi " + Register.ACC() + ", " + expression.register() + ", 0");
         return null;
     }
