@@ -73,23 +73,23 @@ class CodeGenerator implements AATVisitor {
             emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
         } else if (expression.operator() == AATOperator.EQUAL) {
             emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", truelab");
-            emit("addi " + Register.ACC() + ", 0");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi " + Register.ACC() + ", 1");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT_EQUAL) {
             emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", truelab");
-            emit("addi " + Register.ACC() + ", 1");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
             emit("j endlab");
             emit("truelab:");
-            emit("addi " + Register.ACC() + ", 0");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.AND) {
             emit("mult " + Register.ACC() + ", " + Register.Tmp1() + "");
             emit("mflo " + Register.ACC() + "");
             emit("bgtz " + Register.ACC() + ", truelab");
-            emit("addi " + Register.ACC() + ", 0");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
             emit("j endlab");
             emit("truelab:");
             emit("addi " + Register.ACC() + ", 1");
@@ -97,17 +97,17 @@ class CodeGenerator implements AATVisitor {
         } else if (expression.operator() == AATOperator.OR) {
             emit("add " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
             emit("bgtz " + Register.ACC() + ", truelab");
-            emit("addi " + Register.ACC() + ", 0");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
             emit("j endlab");
             emit("truelab:");
-            emit("addi " + Register.ACC() + ", 1");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
             emit("endlab:");
         } else if (expression.operator() == AATOperator.NOT) {
             expression.left().Accept(this);
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " + Register.ESP() + ", -4");
 
-            emit("addi " + Register.Tmp1() + ", 1");
+            emit("addi " + Register.Tmp1() + ", " + Register.Zero() + ", 1");
 
             emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         }
