@@ -93,24 +93,9 @@ class CodeGenerator implements AATVisitor {
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
             emit(endlab +":");
         } else if (expression.operator() == AATOperator.AND) {
-            this.labeldepth++;
-            emit("mult " + Register.ACC() + ", " + Register.Tmp1() + "");
-            emit("mflo " + Register.ACC() + "");
-            emit("bgtz " + Register.ACC() + ", " + truelab);
-            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
-            emit("j " + endlab);
-            emit(truelab + ":");
-            emit("li " + Register.ACC() + ", 1");
-            emit(endlab + ":");
+            emit("and " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1());
         } else if (expression.operator() == AATOperator.OR) {
-            this.labeldepth++;
-            emit("add " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
-            emit("bgtz " + Register.ACC() + ", " + truelab);
-            emit("li " + Register.ACC() + ", 0");
-            emit("j " + endlab);
-            emit(truelab + ":");
-            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
-            emit(endlab + ":");
+            emit("or " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1());
         } else if (expression.operator() == AATOperator.NOT) {
             expression.left().Accept(this);
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
