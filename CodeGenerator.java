@@ -193,7 +193,7 @@ class CodeGenerator implements AATVisitor {
             } else if (statement.rhs() instanceof AATMemory) {
                 System.out.println("Encountered lhs is a memory, rhs case is a memory");
             } else if (statement.rhs() instanceof AATExpression) {
-                emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func");
+                emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func:");
             } else {
                System.out.println("Not handling lhs is a register, rhs is unknown");
             }
@@ -224,7 +224,7 @@ class CodeGenerator implements AATVisitor {
             } else if (statement.rhs() instanceof AATOperator) {
                 emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
             } else if (statement.rhs() instanceof AATMemory) {
-               emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func");
+               emit("doingmov" + this.NUMMOVS + "lhs_is_reg_rhs_is_func:");
             } else {
 
             }
