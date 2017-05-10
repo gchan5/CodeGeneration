@@ -86,7 +86,7 @@ public class AATBuildTree {
     }
 
     public AATStatement dowhileStatement(AATExpression test, AATStatement dowhilebody) {
-        Label label1 = new Label("do-while");
+        Label label1 = new Label("dowhile");
 
         return sequentialStatement(new AATLabel(label1),
                 sequentialStatement(dowhilebody,
