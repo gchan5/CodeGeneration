@@ -138,7 +138,7 @@ class CodeGenerator implements AATVisitor {
             if(multiplier == n){
                 emit("sw " + Register.ACC() + ", " + 0 + "(" + Register.SP() + ")");
             } else {
-                emit("sw " + Register.ACC() + ", -" + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
+                emit("sw " + Register.ACC() + ", " + -1 * ((4 * n) - (4 * multiplier)) + "(" + Register.SP() + ")");
             }
         }
 
@@ -176,49 +176,66 @@ class CodeGenerator implements AATVisitor {
 
         // <emit code to store acc on expression stack>
         if (statement.lhs() instanceof AATMemory) {
-            emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
+            
 
-            // Accept the right hand side
             if (statement.rhs() instanceof AATConstant) {
+                emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
             } else if (statement.rhs() instanceof AATRegister) {
+                emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
             } else if (statement.rhs() instanceof AATOperator) {
+                emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
+            } else if (statement.rhs() instanceof AATMemory) {
+                System.out.println("Not handling lhs is a memory, rhs case is a memory");
+            } else {
+                System.out.println("Not handling lhs is a register, rhs is unknown");
             }
 
             // Store lhs memory value into ACC
             ((AATMemory)statement.lhs()).mem().Accept(this);
-
+            
             // Move acc onto esp (can't assume rhs won't use t1)
             emit("sw " + Register.ACC() + ", 0(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", -4");
-
+            
             // Store rhs value into ACC
             statement.rhs().Accept(this);
 
             // Load lhs value from esp into t1
             emit("lw " + Register.Tmp1() + ", 4(" + Register.ESP() + ")");
             emit("addi " + Register.ESP() + ", " +Register.ESP() + ", 4");
-
+            
             // Move acc into t1
             emit("sw " + Register.ACC() + ", 0(" + Register.Tmp1() + ")");
 
         } else if (statement.lhs() instanceof AATRegister) {
-            emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
+
+            if (statement.rhs() instanceof AATConstant) {
+                emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + "_" + ((AATConstant) statement.rhs()).value() + ":");
+            } else if (statement.rhs() instanceof AATRegister) {
+                emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + "_" + ((AATRegister)statement.rhs()).register() + ":");
+            } else if (statement.rhs() instanceof AATOperator) {
+                emit("doingmov" + this.NUMMOVS + "_lhs_is_reg_" + ((AATRegister)statement.lhs()).register() + ":");
+            } else if (statement.rhs() instanceof AATMemory) {
+               
+            } else {
+           
+            }
 
             // Get value of rhs into ACC
             statement.rhs().Accept(this);
 
             // Store ACC into Register denoted by lhs
             if (statement.rhs() instanceof AATConstant) {
-                emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
+                emit("li " + ((AATRegister)statement.lhs()).register() + ", " + ((AATConstant) statement.rhs()).value());
             } else if (statement.rhs() instanceof AATRegister) {
                 emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
             } else if (statement.rhs() instanceof AATOperator) {
                 emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
             } else if (statement.rhs() instanceof AATMemory) {
-                emit("move " + ((AATRegister) statement.lhs()).register() + ", " + Register.ACC());
+                emit("move " + ((AATRegister)statement.lhs()).register() + ", " + Register.ACC());
+            } else {
+                System.out.println("Not handling lhs is a register, rhs is unknown");
             }
-
-
         }
         emit("endmov" + this.NUMMOVS++ + ":");
         return null;
