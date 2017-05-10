@@ -86,11 +86,11 @@ class CodeGenerator implements AATVisitor {
             emit(endlab + ":");
         } else if (expression.operator() == AATOperator.NOT_EQUAL) {
             this.labeldepth++;
-            emit("beq " + Register.ACC() + ", " + Register.Tmp1() + ", " + truelab);
-            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
+            emit("bne " + Register.ACC() + ", " + Register.Tmp1() + ", " + truelab);
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
             emit("j " + endlab);
             emit(truelab + ":");
-            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
+            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
             emit(endlab +":");
         } else if (expression.operator() == AATOperator.AND) {
             this.labeldepth++;
@@ -100,13 +100,13 @@ class CodeGenerator implements AATVisitor {
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
             emit("j " + endlab);
             emit(truelab + ":");
-            emit("addi " + Register.ACC() + ", 1");
+            emit("li " + Register.ACC() + ", 1");
             emit(endlab + ":");
         } else if (expression.operator() == AATOperator.OR) {
             this.labeldepth++;
             emit("add " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
             emit("bgtz " + Register.ACC() + ", " + truelab);
-            emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 0");
+            emit("li " + Register.ACC() + ", 0");
             emit("j " + endlab);
             emit(truelab + ":");
             emit("addi " + Register.ACC() + ", " + Register.Zero() + ", 1");
