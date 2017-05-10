@@ -185,7 +185,7 @@ class CodeGenerator implements AATVisitor {
             } else if (statement.rhs() instanceof AATOperator) {
                 emit("doingmov" + this.NUMMOVS + "_lhs_is_mem:");
             } else if (statement.rhs() instanceof AATMemory) {
-                System.out.println("Not handling lhs is a memory, rhs case is a memory");
+                System.out.println("Encountered lhs is a memory, rhs case is a memory");
             } else {
                 System.out.println("Not handling lhs is a register, rhs is unknown");
             }
