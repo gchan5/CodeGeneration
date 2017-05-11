@@ -106,9 +106,9 @@ class CodeGenerator implements AATVisitor {
 
             emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.MULTIPLY) {
-            emit("mult " + Register.Tmp1() + ", " + Register.ACC());
-            // // emit("mult " + Register.ACC() + ", " + Register.Tmp1());
-            emit("mflo " + Register.ACC());
+            // emit("mult " + Register.Tmp1() + ", " + Register.ACC());
+            emit("mul " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1());
+            // emit("mflo " + Register.ACC());
         } else if (expression.operator() == AATOperator.DIVIDE) {
             emit("div " + Register.Tmp1() + ", " + Register.ACC());
             // emit("div " + Register.ACC() + ", " + Register.Tmp1());
