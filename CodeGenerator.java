@@ -66,11 +66,13 @@ class CodeGenerator implements AATVisitor {
         } else if (expression.operator() == AATOperator.MINUS) {
             emit("sub " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.LESS_THAN) {
-            emit("slt " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
+            emit("slt " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC());
+            // emit("slt " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
         } else if (expression.operator() == AATOperator.GREATER_THAN) {
-            emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
-            emit("sw " + Register.ACC() + ", 4(" + Register.ESP() + ")");
-            emit("add " + Register.ESP() + ", " + Register.ESP() + ", 4");
+            emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1());
+            // emit("slt " + Register.ACC() + ", " + Register.ACC() + ", " + Register.Tmp1() + "");
+            // emit("sw " + Register.ACC() + ", 4(" + Register.ESP() + ")");
+            // emit("add " + Register.ESP() + ", " + Register.ESP() + ", 4");
         } else if (expression.operator() == AATOperator.LESS_THAN_EQUAL) {
             emit("addi " + Register.Tmp1() + ", " + Register.Tmp1() + ", -1");
             emit("slt " + Register.ACC() + ", " + Register.Tmp1() + ", " + Register.ACC() + "");
